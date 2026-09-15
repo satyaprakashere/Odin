@@ -29,7 +29,7 @@ foreign lib {
 
 	[[ More; https://pubs.opengroup.org/onlinepubs/9699919799/functions/signal.html ]]
 	*/
-	signal :: proc(sig: Signal, func: proc "c" (Signal)) -> proc "c" (Signal) ---
+	signal :: proc(sig: Signal, fn: proc "c" (Signal)) -> proc "c" (Signal) ---
 
 	/*
 	Raises a signal, calling its handler and then returning.

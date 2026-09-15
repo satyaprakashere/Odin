@@ -209,6 +209,7 @@ struct TypeProc {
 	bool     diverging; // no return
 	bool     return_by_pointer;
 	bool     optional_ok;
+	bool     is_pure;
 };
 
 struct TypeNamed {
@@ -3211,7 +3212,8 @@ gb_internal bool are_proc_properties_identical(Type *x, Type *y) {
 	       x->Proc.c_vararg    == y->Proc.c_vararg    &&
 	       x->Proc.variadic    == y->Proc.variadic    &&
 	       x->Proc.diverging   == y->Proc.diverging   &&
-	       x->Proc.optional_ok == y->Proc.optional_ok;
+	       x->Proc.optional_ok == y->Proc.optional_ok &&
+	       x->Proc.is_pure     == y->Proc.is_pure;
 }
 
 gb_internal bool are_types_identical_internal(Type *x, Type *y, bool check_tuple_names) {
@@ -5674,12 +5676,19 @@ gb_internal gbString write_type_to_string(gbString str, Type *type, bool shortha
 		break;
 
 	case Type_Proc:
-		str = gb_string_appendc(str, "proc");
+		if (type->Proc.is_pure) {
+			str = gb_string_appendc(str, "func");
+		} else {
+			str = gb_string_appendc(str, "proc");
+		}
 
-		if (type->Proc.calling_convention != default_calling_convention()) {
-			str = gb_string_appendc(str, " \"");
-			str = gb_string_appendc(str, proc_calling_convention_strings[type->Proc.calling_convention]);
-			str = gb_string_appendc(str, "\" ");
+		{
+			ProcCallingConvention def_cc = type->Proc.is_pure ? ProcCC_Contextless : default_calling_convention();
+			if (type->Proc.calling_convention != def_cc) {
+				str = gb_string_appendc(str, " \"");
+				str = gb_string_appendc(str, proc_calling_convention_strings[type->Proc.calling_convention]);
+				str = gb_string_appendc(str, "\" ");
+			}
 		}
 
 		str = gb_string_appendc(str, "(");

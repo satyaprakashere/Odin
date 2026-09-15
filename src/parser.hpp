@@ -470,6 +470,7 @@ struct AsmMemClassify {
 		Token where_token; \
 		Slice<Ast *> where_clauses; \
 		DeclInfo *decl; \
+		bool is_pure; \
 	}) \
 	AST_KIND(CompoundLit, "compound literal", struct { \
 		Ast *type; \
@@ -810,6 +811,7 @@ AST_KIND(_TypeBegin, "", bool) \
 		ProcCallingConvention calling_convention; \
 		bool generic; \
 		bool diverging; \
+		bool is_pure; \
 	}) \
 	AST_KIND(PointerType, "pointer type", struct { \
 		Token token; \

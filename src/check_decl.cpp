@@ -2287,6 +2287,10 @@ gb_internal bool check_proc_body(CheckerContext *ctx_, Token token, DeclInfo *de
 	ctx->curr_proc_decl = decl;
 	ctx->curr_proc_sig  = type;
 	ctx->curr_proc_calling_convention = type->Proc.calling_convention;
+	if (type->Proc.is_pure) {
+		ctx->in_pure_func = true;
+		ctx->scope->flags &= ~ScopeFlag_ContextDefined;
+	}
 
 	if (decl->parent && decl->entity.load() && decl->parent->entity) {
 		decl->entity.load()->parent_proc_decl = decl->parent;

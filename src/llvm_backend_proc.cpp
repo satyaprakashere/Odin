@@ -179,6 +179,16 @@ gb_internal lbProcedure *lb_create_procedure(lbModule *m, Entity *entity, bool i
 		lb_add_attribute_to_proc(m, p->value, "nounwind");
 	}
 
+	if (pt->Proc.is_pure) {
+		lb_add_attribute_to_proc(m, p->value, "nounwind");
+		lb_add_attribute_to_proc(m, p->value, "willreturn");
+		#if LLVM_VERSION_MAJOR >= 16
+			lb_add_attribute_to_proc_with_string(m, p->value, str_lit("memory"), str_lit("argmem: readwrite"));
+		#else
+			lb_add_attribute_to_proc(m, p->value, "argmemonly");
+		#endif
+	}
+
 	if (pt->Proc.diverging) {
 		lb_add_attribute_to_proc(m, p->value, "noreturn");
 	}

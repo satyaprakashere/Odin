@@ -2743,10 +2743,15 @@ gb_internal bool check_procedure_type(CheckerContext *ctx, Type *type, Ast *proc
 	type->Proc.specialization_count = specialization_count;
 	type->Proc.diverging            = pt->diverging;
 	type->Proc.optional_ok          = optional_ok;
+	type->Proc.is_pure              = pt->is_pure;
 
 	bool is_polymorphic = false;
 	for (isize i = 0; i < param_count; i++) {
 		Entity *e = params->Tuple.variables[i];
+
+		if (pt->is_pure && is_type_dynamic_array(e->type)) {
+			error(e->token, "Dynamic array types are forbidden in 'func' signatures; use slice '[]T' instead");
+		}
 
 		if (e->kind != Entity_Variable) {
 			is_polymorphic = true;
@@ -2774,6 +2779,9 @@ gb_internal bool check_procedure_type(CheckerContext *ctx, Type *type, Ast *proc
 	}
 	for (isize i = 0; i < result_count; i++) {
 		Entity *e = results->Tuple.variables[i];
+		if (pt->is_pure && is_type_dynamic_array(e->type)) {
+			error(e->token, "Dynamic array types are forbidden in 'func' signatures; use slice '[]T' instead");
+		}
 		if (e->kind != Entity_Variable) {
 			is_polymorphic = true;
 			break;

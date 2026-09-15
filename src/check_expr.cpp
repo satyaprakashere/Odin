@@ -2042,6 +2042,9 @@ gb_internal Entity *check_ident(CheckerContext *c, Operand *o, Ast *n, Type *nam
 			o->type = t_invalid;
 			return e;
 		}
+		if (c->in_pure_func && (e->Variable.is_global || (e->flags & EntityFlag_Static) != 0)) {
+			error(o->expr, "Cannot access mutable global variable '%.*s' inside a pure function", LIT(name));
+		}
 		e->flags |= EntityFlag_Used;
 		if (type == t_invalid) {
 			o->type = t_invalid;
@@ -6341,6 +6344,9 @@ gb_internal Entity *check_selector(CheckerContext *c, Operand *operand, Ast *nod
 		}
 		break;
 	case Entity_Variable:
+		if (c->in_pure_func && (entity->Variable.is_global || (entity->flags & EntityFlag_Static) != 0)) {
+			error(node, "Cannot access mutable global variable '%.*s' inside a pure function", LIT(entity->token.string));
+		}
 		if (sel.is_bit_field) {
 			se->is_bit_field = true;
 		}
@@ -9070,6 +9076,12 @@ gb_internal ExprKind check_call_expr(CheckerContext *c, Operand *operand, Ast *c
 		}
 	}
 	pt = base_type(pt);
+
+	if (c->in_pure_func && pt->kind == Type_Proc && !pt->Proc.is_pure) {
+		gbString proc_str = expr_to_string(proc);
+		error(call, "Cannot call impure procedure '%s' inside a pure function", proc_str);
+		gb_string_free(proc_str);
+	}
 
 	if (pt->kind == Type_Proc && pt->Proc.calling_convention == ProcCC_Odin) {
 		if ((c->scope->flags & ScopeFlag_ContextDefined) == 0) {
@@ -12541,6 +12553,10 @@ gb_internal ExprKind check_expr_base_internal(CheckerContext *c, Operand *o, Ast
 		switch (i->kind) {
 		case Token_context:
 			{
+				if (c->in_pure_func) {
+					error(node, "Cannot access 'context' inside a pure function");
+					return kind;
+				}
 				if (c->proc_name.len == 0 && c->curr_proc_sig == nullptr) {
 					error(node, "'context' is only allowed within procedures");
 					return kind;
