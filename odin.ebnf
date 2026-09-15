@@ -432,11 +432,12 @@ BitFieldList     = BitFieldField { "," BitFieldField } [ "," ] ;
 BitFieldField    = IDENT ":" Type "|" Expr ;
 
 
-ProcType         = "proc" [ CallingConvention ] "(" [ ProcParamList ] ")"
+ProcOrFunc       = "proc" | "func" ;
+ProcType         = ProcOrFunc [ CallingConvention ] "(" [ ProcParamList ] ")"
                    [ "->" ProcResults ] ;
 
 ProcLiteral      = ProcType [ WhereClause ] ( ProcBody | "---" ) ; /* --- = no body / foreign  */
-ProcGroup        = "proc" "{" ProcGroupList "}" ;                  /* procedure group          */
+ProcGroup        = ProcOrFunc "{" ProcGroupList "}" ;              /* procedure / function group */
 
 
 ProcBody         = "{" { Stmt } "}"

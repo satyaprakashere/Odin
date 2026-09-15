@@ -944,6 +944,7 @@ struct CheckerContext {
 	Type *         curr_proc_sig;
 	ProcCallingConvention curr_proc_calling_convention;
 	bool           in_proc_sig;
+	bool           in_pure_func;
 	ForeignContext foreign_context;
 
 	Array<Entity *> *asm_templates_to_check; // of the procedure body being checked, see `check_asm_template_body_later`

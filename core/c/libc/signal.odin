@@ -17,7 +17,7 @@ SIG_ATOMIC_MAX :: max(sig_atomic_t)
 
 @(default_calling_convention="c")
 foreign libc {
-	signal :: proc(sig: int, func: proc "c" (int)) -> proc "c" (int) ---
+	signal :: proc(sig: int, fn: proc "c" (int)) -> proc "c" (int) ---
 	raise  :: proc(sig: int) -> int ---
 }
 
