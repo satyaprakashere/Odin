@@ -38,7 +38,7 @@ when ODIN_OS == .Windows {
 	@(default_calling_convention="c")
 	foreign libc {
 		// 7.26.2 Initialization functions
-		@(link_name="_Call_once")     call_once     :: proc(flag: ^once_flag, func: proc "c" ()) ---
+		@(link_name="_Call_once")     call_once     :: proc(flag: ^once_flag, fn: proc "c" ()) ---
 		// 7.26.3 Condition variable functions
 		@(link_name="_Cnd_broadcast") cnd_broadcast :: proc(cond: ^cnd_t) -> int ---
 		@(link_name="_Cnd_destroy")   cnd_destroy   :: proc(cond: ^cnd_t) ---
@@ -56,7 +56,7 @@ when ODIN_OS == .Windows {
 		@(link_name="_Mtx_unlock")    mtx_unlock    :: proc(mtx: ^mtx_t) -> int ---
 
 		// 7.26.5 Thread functions
-		@(link_name="_Thrd_create")   thrd_create   :: proc(thr: ^thrd_t, func: thrd_start_t, arg: rawptr) -> int ---
+		@(link_name="_Thrd_create")   thrd_create   :: proc(thr: ^thrd_t, fn: thrd_start_t, arg: rawptr) -> int ---
 		@(link_name="_Thrd_current")  thrd_current  :: proc() -> thrd_t ---
 		@(link_name="_Thrd_detach")   thrd_detach   :: proc(thr: thrd_t) -> int ---
 		@(link_name="_Thrd_equal")    thrd_equal    :: proc(lhs, rhs: thrd_t) -> int ---
@@ -101,7 +101,7 @@ when ODIN_OS == .Linux {
 	@(default_calling_convention="c")
 	foreign libc {
 		// 7.26.2 Initialization functions
-		call_once     :: proc(flag: ^once_flag, func: proc "c" ()) ---
+		call_once     :: proc(flag: ^once_flag, fn: proc "c" ()) ---
 
 		// 7.26.3 Condition variable functions
 		cnd_broadcast :: proc(cond: ^cnd_t) -> int ---
@@ -120,7 +120,7 @@ when ODIN_OS == .Linux {
 		mtx_unlock    :: proc(mtx: ^mtx_t) -> int ---
 
 		// 7.26.5 Thread functions
-		thrd_create   :: proc(thr: ^thrd_t, func: thrd_start_t, arg: rawptr) -> int ---
+		thrd_create   :: proc(thr: ^thrd_t, fn: thrd_start_t, arg: rawptr) -> int ---
 		thrd_current  :: proc() -> thrd_t ---
 		thrd_detach   :: proc(thr: thrd_t) -> int ---
 		thrd_equal    :: proc(lhs, rhs: thrd_t) -> int ---

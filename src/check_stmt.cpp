@@ -530,6 +530,31 @@ gb_internal Type *check_assignment_variable(CheckerContext *ctx, Operand *lhs, O
 		gb_string_free(t);
 	}
 
+	if (ctx->in_pure_func) {
+		Ast *lhs_expr = unparen_expr(lhs->expr);
+		if (lhs_expr->kind == Ast_DerefExpr) {
+			error(lhs->expr, "Cannot mutate memory through raw pointer inside a pure function (only slices may be mutated)");
+			return nullptr;
+		} else if (lhs_expr->kind == Ast_IndexExpr) {
+			Type *indexed_type = base_type(type_of_expr(lhs_expr->IndexExpr.expr));
+			if (indexed_type != nullptr && (is_type_pointer(indexed_type) || is_type_multi_pointer(indexed_type))) {
+				error(lhs->expr, "Cannot mutate memory through raw pointer inside a pure function (only slices may be mutated)");
+				return nullptr;
+			}
+		}
+
+		Entity *var_e = entity_from_expr(lhs->expr);
+		if (var_e == nullptr && node->kind == Ast_Ident) {
+			var_e = scope_lookup(ctx->scope, node->Ident.interned, node->Ident.hash);
+		}
+		if (var_e != nullptr && var_e->kind == Entity_Variable && (var_e->flags & EntityFlag_Field) == 0) {
+			if (var_e->Variable.is_global || (var_e->flags & EntityFlag_Static) != 0) {
+				error(lhs->expr, "Cannot mutate global variable '%.*s' inside a pure function", LIT(var_e->token.string));
+				return nullptr;
+			}
+		}
+	}
+
 	switch (lhs->mode) {
 	case Addressing_Invalid:
 		return nullptr;
@@ -541,6 +566,10 @@ gb_internal Type *check_assignment_variable(CheckerContext *ctx, Operand *lhs, O
 		break;
 
 	case Addressing_MapIndex: {
+		if (ctx->in_pure_func) {
+			error(lhs->expr, "Cannot insert into or mutate map inside a pure function (requires memory allocation)");
+			return nullptr;
+		}
 		Ast *ln = unparen_expr(lhs->expr);
 		if (ln->kind == Ast_IndexExpr) {
 			Ast *x = ln->IndexExpr.expr;
@@ -560,6 +589,10 @@ gb_internal Type *check_assignment_variable(CheckerContext *ctx, Operand *lhs, O
 	}
 
 	case Addressing_Context:
+		if (ctx->in_pure_func) {
+			error(lhs->expr, "Cannot modify 'context' inside a pure function");
+			return nullptr;
+		}
 		break;
 
 	case Addressing_SoaVariable:

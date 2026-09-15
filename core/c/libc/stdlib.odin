@@ -110,8 +110,8 @@ foreign libc {
 
 	// 7.22.4 Communication with the environment
 	abort         :: proc() -> ! ---
-	atexit        :: proc(func: proc "c" ()) -> int ---
-	at_quick_exit :: proc(func: proc "c" ()) -> int ---
+	atexit        :: proc(fn: proc "c" ()) -> int ---
+	at_quick_exit :: proc(fn: proc "c" ()) -> int ---
 	exit          :: proc(status: int) -> ! ---
 	_Exit         :: proc(status: int) -> ! ---
 	getenv        :: proc(name: cstring) -> cstring ---

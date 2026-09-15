@@ -1040,6 +1040,7 @@ gb_internal Ast *ast_proc_lit(AstFile *f, Ast *type, Ast *body, u64 tags, Token 
 	result->ProcLit.tags = tags;
 	result->ProcLit.where_token = where_token;
 	result->ProcLit.where_clauses = slice_from_array(where_clauses);
+	result->ProcLit.is_pure = (type != nullptr && type->kind == Ast_ProcType && type->ProcType.is_pure);
 	return result;
 }
 
@@ -1361,6 +1362,7 @@ gb_internal Ast *ast_proc_type(AstFile *f, Token token, Ast *params, Ast *result
 	result->ProcType.calling_convention = calling_convention;
 	result->ProcType.generic = generic;
 	result->ProcType.diverging = diverging;
+	result->ProcType.is_pure = (token.kind == Token_func);
 	return result;
 }
 
@@ -3236,8 +3238,9 @@ gb_internal Ast *parse_operand(AstFile *f, bool lhs) {
 	}
 
 	// Parse Procedure Type or Literal or Group
-	case Token_proc: {
-		Token token = expect_token(f, Token_proc);
+	case Token_proc:
+	case Token_func: {
+		Token token = advance_token(f);
 
 		if (f->curr_token.kind == Token_OpenBrace) { // ProcGroup
 			Token open = expect_token(f, Token_OpenBrace);
@@ -4818,11 +4821,15 @@ gb_internal Ast *parse_proc_type(AstFile *f, Token proc_token) {
 		}
 	}
 	if (cc == ProcCC_Invalid) {
-		if (f->in_foreign_block) {
+		if (proc_token.kind == Token_func) {
+			cc = ProcCC_Contextless;
+		} else if (f->in_foreign_block) {
 			cc = ProcCC_ForeignBlockDefault;
 		} else {
 			cc = default_calling_convention();
 		}
+	} else if (proc_token.kind == Token_func && cc == ProcCC_Odin) {
+		syntax_error(proc_token, "A pure function ('func') cannot use the \"odin\" calling convention because it requires a context");
 	}
 
 
@@ -6086,6 +6093,7 @@ gb_internal Ast *parse_stmt(AstFile *f) {
 	// Operands
 	case Token_context: // Also allows for `context =`
 	case Token_proc:
+	case Token_func:
 	case Token_Ident:
 	case Token_Integer:
 	case Token_Float:
