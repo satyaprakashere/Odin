@@ -140,36 +140,8 @@ String const token_strings[] = {
 };
 
 
-enum LanguageDialect : u8 {
-	Dialect_Odin = 0,
-	Dialect_Thor = 1,
-};
-gb_global LanguageDialect global_default_dialect = Dialect_Odin;
-
-gb_internal bool is_thor_keyword(TokenKind kind) {
-	switch (kind) {
-	case Token_func:
-		return true;
-	default:
-		return false;
-	}
-}
-
-gb_internal bool path_is_thor_dialect(String const &fullpath) {
-	if (string_ends_with(fullpath, str_lit(".thor"))) {
-		return true;
-	}
-	if (global_default_dialect == Dialect_Thor) {
-		bool is_core_or_vendor = string_contains_string(fullpath, str_lit("/core/")) ||
-		                         string_contains_string(fullpath, str_lit("/vendor/")) ||
-		                         string_contains_string(fullpath, str_lit("\\core\\")) ||
-		                         string_contains_string(fullpath, str_lit("\\vendor\\"));
-		if (!is_core_or_vendor) {
-			return true;
-		}
-	}
-	return false;
-}
+#include "thor/thor.hpp"
+#include "thor/thor.cpp"
 
 struct KeywordHashEntry {
 	u32       hash;

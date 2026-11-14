@@ -14,3 +14,8 @@ This directory contains the finalized architectural planning, technical design, 
    - Restoration of `core/` and `odin.ebnf` to achieve zero upstream diffs.
    - Verification logs from testing `core:c/libc`, `test_pure_func.thor`, mixed Thor/Odin packages, and the demo suite.
    - Git commit history and usage examples.
+
+3. [thor_strict_separation_plan.md](file:///Users/prakash/github/Odin/reports/done/thor_strict_separation_plan.md):
+   - Architectural plan for strict C/C++ style separation of Thor (`.thor`) and Odin (`.odin`).
+   - Modular isolation of compiler code into `src/thor/`.
+   - Dedicated standard library collection (`thor:`) and dual-driver CLI ergonomics (`odin` vs `thor`).

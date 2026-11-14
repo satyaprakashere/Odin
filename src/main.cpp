@@ -4540,6 +4540,13 @@ int main(int arg_count, char const **arg_ptr) {
 		add_library_collection(str_lit("shared"),
 			get_fullpath_relative(heap_allocator(), odin_root_dir(), str_lit("shared"), nullptr));
 	}
+	if (!find_library_collection_path(str_lit("thor"), nullptr)) {
+		bool ok = false;
+		String thor_path = get_fullpath_relative(heap_allocator(), odin_root_dir(), str_lit("thor"), &ok);
+		if (ok && gb_file_exists(cast(char const *)thor_path.text)) {
+			add_library_collection(str_lit("thor"), thor_path);
+		}
+	}
 
 	init_build_context(selected_target_metrics ? selected_target_metrics->metrics : nullptr, selected_subtarget);
 	// if (build_context.word_size == 4 && build_context.metrics.os != TargetOs_js) {
