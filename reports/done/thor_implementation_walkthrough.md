@@ -167,3 +167,29 @@ Ran the full demo with strict styling and vetting:
   - `tests/thor_interop/` (mixed package test)
   - `doc/thor/README.md` (Thor documentation)
   - `.gitignore` (added `thor` binary ignore)
+
+---
+
+## 5. Strict C/C++ Style Modular Separation (Final Phase)
+
+### 5.1 Encapsulated Thor Subsystem (`src/thor/`)
+All Thor-specific language logic is now fully isolated from Odin compiler internals:
+- `src/thor/thor.hpp`: Declarations for dialect types, keyword identifiers, and semantic validation prototypes.
+- `src/thor/thor.cpp`: Implements extension-based language resolution.
+- `src/thor/thor_checker.cpp`: Encapsulates all pure function semantic checks:
+  - `thor_check_global_variable_access`: Blocks access to mutable globals from pure functions.
+  - `thor_check_call_purity`: Prevents calling impure procedures from `func`.
+  - `thor_check_context_access`: Enforces prohibition of Odin implicit `context` in pure functions.
+  - `thor_check_assignment_purity`: Validates that raw pointer dereferences, map insertions, and global assignments cannot occur within `func`.
+  - `thor_check_param_type_purity` / `thor_check_result_type_purity`: Forbids dynamic arrays in `func` signatures.
+
+### 5.2 Standard Library Root Collection (`thor:`)
+- Registered `$ODIN_ROOT/thor` in `src/main.cpp` as the `thor:` package collection.
+- Scaffolding:
+  - `thor/README.md`: Library documentation and architecture.
+  - `thor/math/math.thor`: Pure algorithms (`factorial`, `fibonacci`, `gcd`, `square`, `cube`).
+  - `thor/types/types.thor`: Pure data container types (`PureResult`).
+
+### 5.3 Upstream Purity Confirmed
+- `git diff upstream/master -- core/ odin.ebnf`: Confirmed **0 lines changed**.
+- All tests pass identically under `./odin` and `./bin/thor`.
