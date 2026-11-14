@@ -5138,6 +5138,7 @@ gb_internal DECL_ATTRIBUTE_PROC(asm_decl_attribute) {
 	return false;
 }
 
+#include "thor/thor_checker.cpp"
 #include "check_expr.cpp"
 #include "check_builtin.cpp"
 #include "check_type.cpp"
