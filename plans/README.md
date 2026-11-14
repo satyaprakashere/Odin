@@ -8,6 +8,7 @@ This directory serves as the centralized repository for architectural designs, f
 
 | Document | Status | Scope & Purpose |
 |---|---|---|
+| [rekursion_thor_sync_plan.md](file:///Users/prakash/github/Odin/plans/rekursion_thor_sync_plan.md) | **Active / Pipeline** | Architectural plan and protocol for continuous synchronization with the canonical `rekursion/thor` language variant. |
 | [thor_stack_improvement_plan.md](file:///Users/prakash/github/Odin/plans/thor_stack_improvement_plan.md) | **Active / Roadmap** | Comprehensive 5-pillar strategic roadmap detailing LLVM purity codegen, the `thor:` standard library, extended syntax (`match`, `\|>`), tooling/LSP, and automated upstream tracking. |
 | [thor_strict_separation_plan.md](file:///Users/prakash/github/Odin/plans/thor_strict_separation_plan.md) | **Implemented** | Architecture specification for strict C/C++ style separation between `.thor` and `.odin` files, preserving 100% zero-diff compatibility with upstream Odin `core:` and `vendor:`. |
 | [thor_extension_plan.md](file:///Users/prakash/github/Odin/plans/thor_extension_plan.md) | **Implemented** | Initial architectural plan for extending the Odin compiler frontend with the Thor pure function dialect (`func`). |
