@@ -140,6 +140,37 @@ String const token_strings[] = {
 };
 
 
+enum LanguageDialect : u8 {
+	Dialect_Odin = 0,
+	Dialect_Thor = 1,
+};
+gb_global LanguageDialect global_default_dialect = Dialect_Odin;
+
+gb_internal bool is_thor_keyword(TokenKind kind) {
+	switch (kind) {
+	case Token_func:
+		return true;
+	default:
+		return false;
+	}
+}
+
+gb_internal bool path_is_thor_dialect(String const &fullpath) {
+	if (string_ends_with(fullpath, str_lit(".thor"))) {
+		return true;
+	}
+	if (global_default_dialect == Dialect_Thor) {
+		bool is_core_or_vendor = string_contains_string(fullpath, str_lit("/core/")) ||
+		                         string_contains_string(fullpath, str_lit("/vendor/")) ||
+		                         string_contains_string(fullpath, str_lit("\\core\\")) ||
+		                         string_contains_string(fullpath, str_lit("\\vendor\\"));
+		if (!is_core_or_vendor) {
+			return true;
+		}
+	}
+	return false;
+}
+
 struct KeywordHashEntry {
 	u32       hash;
 	TokenKind kind;
@@ -327,6 +358,8 @@ struct Tokenizer {
 	bool insert_semicolon;
 	
 	LoadedFile loaded_file;
+
+	bool is_thor;
 };
 
 
@@ -419,6 +452,7 @@ gb_internal void init_tokenizer_with_data(Tokenizer *t, String const &fullpath, 
 	t->fullpath = fullpath;
 	t->column_minus_one = -1;
 	t->line_count = 1;
+	t->is_thor = path_is_thor_dialect(fullpath);
 
 	t->start = cast(u8 *)data;
 	t->read_curr = t->curr = t->start;
@@ -460,6 +494,7 @@ gb_internal TokenizerInitError init_tokenizer_from_fullpath(Tokenizer *t, String
 	case LoadedFile_Empty:
 		t->fullpath = fullpath;
 		t->line_count = 1;
+		t->is_thor = path_is_thor_dialect(fullpath);
 		break;
 	}	
 	return err;
@@ -774,9 +809,13 @@ gb_internal void tokenizer_get_token(Tokenizer *t, Token *token, int repeat=0) {
 			KeywordHashEntry *entry = &keyword_hash_table[index];
 			if (entry->kind != Token_Invalid && entry->hash == hash) {
 				if (str_eq(entry->text, token->string)) {
-					token->kind = entry->kind;
-					if (token->kind == Token_not_in && entry->text.len == 5) {
-						syntax_error(*token, "Did you mean 'not_in'?");
+					if (is_thor_keyword(entry->kind) && !t->is_thor) {
+						token->kind = Token_Ident;
+					} else {
+						token->kind = entry->kind;
+						if (token->kind == Token_not_in && entry->text.len == 5) {
+							syntax_error(*token, "Did you mean 'not_in'?");
+						}
 					}
 				}
 			}

@@ -6417,7 +6417,7 @@ gb_internal ParseFileError init_ast_file(AstFile *f, String const &fullpath) {
 	f->directory = substring(f->fullpath, 0, gb_max(f->fullpath.len - f->filename.len - 1, 0));
 	set_file_path_string(f->id, f->fullpath);
 	thread_safe_set_ast_file_from_id(f->id, f);
-	if (!string_ends_with(f->fullpath, str_lit(".odin"))) {
+	if (!string_ends_with(f->fullpath, str_lit(".odin")) && !string_ends_with(f->fullpath, str_lit(".thor"))) {
 		return ParseFile_WrongExtension;
 	}
 	gb_zero_item(&f->tokenizer);
@@ -6588,7 +6588,7 @@ gb_internal AstPackage *try_add_import_path(Parser *p, String path, String const
 	pkg->files_to_parse.store(1);
 
 	// NOTE(bill): Single file initial package
-	if (kind == Package_Init && !path_is_directory(path) && string_ends_with(path, FILE_EXT)) {
+	if (kind == Package_Init && !path_is_directory(path) && (string_ends_with(path, str_lit(".odin")) || string_ends_with(path, str_lit(".thor")))) {
 		FileInfo fi = {};
 		fi.name = filename_from_path(path);
 		fi.fullpath = path;
@@ -6645,8 +6645,8 @@ gb_internal AstPackage *try_add_import_path(Parser *p, String path, String const
 		return nullptr;
 	}
 
-	if (string_ends_with(path, str_lit(".odin"))) {
-		error(pos, "'import' declarations cannot import directories with a .odin extension/suffix");
+	if (string_ends_with(path, str_lit(".odin")) || string_ends_with(path, str_lit(".thor"))) {
+		error(pos, "'import' declarations cannot import directories with a .odin or .thor extension/suffix");
 		return nullptr;
 	}
 
@@ -6655,22 +6655,22 @@ gb_internal AstPackage *try_add_import_path(Parser *p, String path, String const
 	for (FileInfo fi : list) {
 		String name = fi.name;
 		String ext = path_extension(name);
-		if (ext == FILE_EXT && !fi.is_dir) {
+		if ((ext == ".odin" || ext == ".thor") && !fi.is_dir) {
 			files_with_ext += 1;
 		}
-		if (ext == FILE_EXT && !is_excluded_target_filename(name)) {
+		if ((ext == ".odin" || ext == ".thor") && !is_excluded_target_filename(name)) {
 			files_to_reserve += 1;
 		}
 	}
 	if (files_with_ext == 0 || files_to_reserve == 1) {
 		ERROR_BLOCK();
 		if (files_with_ext != 0) {
-			syntax_error(pos, "Directory contains no .odin files for the specified platform: %.*s", LIT(rel_path));
+			syntax_error(pos, "Directory contains no .odin or .thor files for the specified platform: %.*s", LIT(rel_path));
 		} else {
-			syntax_error(pos, "Empty directory that contains no .odin files: %.*s", LIT(rel_path));
+			syntax_error(pos, "Empty directory that contains no .odin or .thor files: %.*s", LIT(rel_path));
 		}
 		if (build_context.command_kind == Command_test) {
-			error_line("\tSuggestion: Make an .odin file that imports packages to test and use the `-all-packages` flag.");
+			error_line("\tSuggestion: Make an .odin or .thor file that imports packages to test and use the `-all-packages` flag.");
 		}
 		return nullptr;
 	}
@@ -6680,7 +6680,7 @@ gb_internal AstPackage *try_add_import_path(Parser *p, String path, String const
 	for (FileInfo fi : list) {
 		String name = fi.name;
 		String ext = path_extension(name);
-		if (ext == FILE_EXT && !fi.is_dir) {
+		if ((ext == ".odin" || ext == ".thor") && !fi.is_dir) {
 			if (is_excluded_target_filename(name)) {
 				continue;
 			}
@@ -7727,7 +7727,7 @@ gb_internal ParseFileError process_imported_file(Parser *p, ImportedFile importe
 		} else {
 			switch (err) {
 			case ParseFile_WrongExtension:
-				syntax_error(pos, "Failed to parse file: %.*s; invalid file extension: File must have the extension '.odin'", LIT(fi.name));
+				syntax_error(pos, "Failed to parse file: %.*s; invalid file extension: File must have the extension '.odin' or '.thor'", LIT(fi.name));
 				break;
 			case ParseFile_InvalidFile:
 				syntax_error(pos, "Failed to parse file: %.*s; invalid file or cannot be found", LIT(fi.name));
@@ -7808,9 +7808,8 @@ gb_internal ParseFileError parse_packages(Parser *p, String init_filename) {
 	String init_fullpath = path_to_full_path(permanent_allocator(), init_filename);
 
 	if (!path_is_directory(init_fullpath)) {
-		String const ext = str_lit(".odin");
-		if (!string_ends_with(init_fullpath, ext)) {
-			error({}, "Expected either a directory or a .odin file, got '%.*s'\n", LIT(init_filename));
+		if (!string_ends_with(init_fullpath, str_lit(".odin")) && !string_ends_with(init_fullpath, str_lit(".thor"))) {
+			error({}, "Expected either a directory or a .odin/.thor file, got '%.*s'\n", LIT(init_filename));
 			return ParseFile_WrongExtension;
 		}
 	} else if (init_fullpath.len != 0) {
@@ -7861,9 +7860,8 @@ gb_internal ParseFileError parse_packages(Parser *p, String init_filename) {
 		for (String const &path : build_context.extra_packages) {
 			String fullpath = path_to_full_path(permanent_allocator(), path); // LEAK?
 			if (!path_is_directory(fullpath)) {
-				String const ext = str_lit(".odin");
-				if (!string_ends_with(fullpath, ext)) {
-					error({}, "Expected either a directory or a .odin file, got '%.*s'\n", LIT(fullpath));
+				if (!string_ends_with(fullpath, str_lit(".odin")) && !string_ends_with(fullpath, str_lit(".thor"))) {
+					error({}, "Expected either a directory or a .odin/.thor file, got '%.*s'\n", LIT(fullpath));
 					return ParseFile_WrongExtension;
 				}
 			}

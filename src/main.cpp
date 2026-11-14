@@ -466,6 +466,7 @@ enum BuildFlagKind {
 	BuildFlag_ExportSemanticsFile,
 	BuildFlag_ExportSemanticsFor,
 	BuildFlag_IgnoreUnusedDefineables,
+	BuildFlag_Dialect,
 
 	BuildFlag_Vet,
 	BuildFlag_VetShadowing,
@@ -672,6 +673,7 @@ gb_internal bool parse_build_flags(Array<String> args) {
 	add_flag(&build_flags, BuildFlag_ExportSemanticsFile,     str_lit("export-semantics-file"),     BuildFlagParam_String,  Command_check);
 	add_flag(&build_flags, BuildFlag_ExportSemanticsFor,      str_lit("export-semantics-for"),      BuildFlagParam_String,  Command_check, true);
 	add_flag(&build_flags, BuildFlag_IgnoreUnusedDefineables, str_lit("ignore-unused-defineables"), BuildFlagParam_None,    Command__does_check);
+	add_flag(&build_flags, BuildFlag_Dialect,                 str_lit("dialect"),                   BuildFlagParam_String,  Command__does_check);
 
 	add_flag(&build_flags, BuildFlag_Vet,                     str_lit("vet"),                       BuildFlagParam_None,    Command__does_check);
 	add_flag(&build_flags, BuildFlag_VetUnused,               str_lit("vet-unused"),                BuildFlagParam_None,    Command__does_check);
@@ -1123,6 +1125,18 @@ gb_internal bool parse_build_flags(Array<String> args) {
 						case BuildFlag_IgnoreUnusedDefineables: {
 							GB_ASSERT(value.kind == ExactValue_Invalid);
 							build_context.ignore_unused_defineables = true;
+							break;
+						}
+						case BuildFlag_Dialect: {
+							GB_ASSERT(value.kind == ExactValue_String);
+							if (value.value_string == "odin") {
+								global_default_dialect = Dialect_Odin;
+							} else if (value.value_string == "thor") {
+								global_default_dialect = Dialect_Thor;
+							} else {
+								gb_printf_err("-%.*s '%.*s' must be either 'odin' or 'thor'\n", LIT(name), LIT(value.value_string));
+								bad_flags = true;
+							}
 							break;
 						}
 						case BuildFlag_ShowSystemCalls: {
@@ -4190,6 +4204,9 @@ int main(int arg_count, char const **arg_ptr) {
 	isize double_dash_pos = -1;
 	wchar_t *after_double_dash_raw = nullptr;
 	Array<String> args = setup_args(arg_count, arg_ptr, &double_dash_pos, &after_double_dash_raw);
+	if (args.count > 0 && string_contains_string(args[0], str_lit("thor"))) {
+		global_default_dialect = Dialect_Thor;
+	}
 #if !defined(GB_SYSTEM_WINDOWS)
 	Array<String> run_args = array_make<String>(heap_allocator(), 0, arg_count);
 	defer (array_free(&run_args));
@@ -4495,9 +4512,8 @@ int main(int arg_count, char const **arg_ptr) {
 				gb_printf_err("The `-file` flag tells it to treat a file as a self-contained package.\n");
 				return 1;
 			} else {
-				String const ext = str_lit(".odin");
-				if (!string_ends_with(init_filename, ext)) {
-					gb_printf_err("Expected either a directory or a .odin file, got '%.*s'\n", LIT(init_filename));
+				if (!string_ends_with(init_filename, str_lit(".odin")) && !string_ends_with(init_filename, str_lit(".thor"))) {
+					gb_printf_err("Expected either a directory or a .odin/.thor file, got '%.*s'\n", LIT(init_filename));
 					return 1;
 				}
 				if (!gb_file_exists(cast(const char*)init_filename.text) &&

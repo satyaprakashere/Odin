@@ -2452,7 +2452,7 @@ gb_internal bool init_build_paths(String init_filename) {
 			// Add .bin extension to avoid collision
 			// with package directory name
 			output_extension = STR_LIT("bin");
-		} else if (string_ends_with(init_filename, single_file_extension) && path_is_directory(remove_extension_from_path(init_filename))) {
+		} else if ((string_ends_with(init_filename, str_lit(".odin")) || string_ends_with(init_filename, str_lit(".thor"))) && path_is_directory(remove_extension_from_path(init_filename))) {
 			// Add bin extension if compiling single-file package
 			// with same output name as a directory
 			output_extension = STR_LIT("bin");
@@ -2539,9 +2539,9 @@ gb_internal bool init_build_paths(String init_filename) {
 			while (output_name.len > 0 && (output_name[output_name.len-1] == '/' || output_name[output_name.len-1] == '\\')) {
 				output_name.len -= 1;
 			}
-			// Only trim the extension if it's an Odin source file.
+			// Only trim the extension if it's an Odin or Thor source file.
 			// This lets people build folders with extensions or files beginning with dots.
-			if (path_extension(output_name) == ".odin" && !path_is_directory(output_name)) {
+			if ((path_extension(output_name) == ".odin" || path_extension(output_name) == ".thor") && !path_is_directory(output_name)) {
 				output_name = remove_extension_from_path(output_name);
 			}
 			output_name = remove_directory_from_path(output_name);
