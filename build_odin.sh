@@ -213,6 +213,8 @@ build_odin() {
 	set -x
 	$CXX src/main.cpp src/libtommath.cpp $DISABLED_WARNINGS $CPPFLAGS $CXXFLAGS $EXTRAFLAGS $LDFLAGS -o odin
 	set +x
+	mkdir -p bin
+	ln -sf ../odin bin/thor
 }
 
 run_demo() {
