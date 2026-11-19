@@ -6,6 +6,12 @@
 
 ---
 
+| Document | Status | Target |
+| :--- | :--- | :--- |
+| [`thor_multi_phase_execution_plan.md`](thor_multi_phase_execution_plan.md) | **Active Master Plan** | Q4 2026 – Q2 2027 |
+
+---
+
 ## ⚡ 1. Now (Committed / Active Execution)
 
 | Feature ID | Initiative | Plan Link | Status | Target |
